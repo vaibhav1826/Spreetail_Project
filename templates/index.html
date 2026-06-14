@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FairShare - Flatmates Expenses App</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="glass-container">
+        <!-- Top Navbar -->
+        <header class="app-header">
+            <div class="logo">
+                <i class="fa-solid fa-scale-balanced logo-icon"></i>
+                <span class="logo-text">FairShare</span>
+            </div>
+            
+            <div class="user-selector-container">
+                <span class="selector-label"><i class="fa-solid fa-user-shield"></i> Viewing as:</span>
+                <select id="userSelector" class="user-dropdown">
+                    <!-- Loaded dynamically -->
+                </select>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <nav class="app-nav">
+            <button class="nav-tab active" data-tab="dashboard">
+                <i class="fa-solid fa-chart-pie"></i> Dashboard
+            </button>
+            <button class="nav-tab" data-tab="audit">
+                <i class="fa-solid fa-list-check"></i> Rohan's Audit Log
+            </button>
+            <button class="nav-tab" data-tab="debts">
+                <i class="fa-solid fa-handshake-angle"></i> Aisha's Debts
+            </button>
+            <button class="nav-tab" data-tab="transactions">
+                <i class="fa-solid fa-money-bill-transfer"></i> Expenses & Settle
+            </button>
+            <button class="nav-tab" data-tab="import">
+                <i class="fa-solid fa-file-import"></i> CSV Import Wizard
+            </button>
+        </nav>
+
+        <!-- Main Workspace -->
+        <main class="app-content">
+            
+            <!-- VIEW 1: DASHBOARD -->
+            <section id="dashboardView" class="tab-view active-view">
+                <div class="view-header">
+                    <h2>Group Balance Summary</h2>
+                    <p class="subtitle">Real-time balances for flat group "Flat Expenses"</p>
+                </div>
+                
+                <!-- Balances Grid -->
+                <div class="balances-grid" id="balancesGrid">
+                    <!-- Rendered dynamically -->
+                </div>
+            </section>
+
+            <!-- VIEW 2: AUDIT LOG (Rohan's view) -->
+            <section id="auditView" class="tab-view">
+                <div class="view-header">
+                    <h2>Personal Audit Trail</h2>
+                    <p class="subtitle">Rohan's Request: "No magic numbers. See exactly which expenses make up the balance."</p>
+                </div>
+                
+                <div class="audit-summary-card">
+                    <div class="audit-stat">
+                        <span class="stat-label">Total Paid (Credits)</span>
+                        <span class="stat-value text-green" id="auditPaid">₹0.00</span>
+                    </div>
+                    <div class="audit-divider"></div>
+                    <div class="audit-stat">
+                        <span class="stat-label">Total Owed (Debits)</span>
+                        <span class="stat-value text-red" id="auditOwed">₹0.00</span>
+                    </div>
+                    <div class="audit-divider"></div>
+                    <div class="audit-stat">
+                        <span class="stat-label">Net Outstanding Balance</span>
+                        <span class="stat-value" id="auditNet">₹0.00</span>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Payer</th>
+                                <th>Total Cost</th>
+                                <th>Your Share</th>
+                                <th>You Paid</th>
+                                <th>Net Impact</th>
+                            </tr>
+                        </thead>
+                        <tbody id="auditTableBody">
+                            <!-- Rendered dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- VIEW 3: SIMPLIFIED DEBTS (Aisha's view) -->
+            <section id="debtsView" class="tab-view">
+                <div class="view-header">
+                    <h2>Simplified Settlements</h2>
+                    <p class="subtitle">Aisha's Request: "I just want one number per person. Who pays whom, how much, done."</p>
+                </div>
+                
+                <div class="debt-box">
+                    <div class="debt-illustration">
+                        <i class="fa-solid fa-arrows-spin debt-anim-icon"></i>
+                    </div>
+                    <div class="debts-list" id="debtsList">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 4: TRANSACTIONS (Add manual / View list) -->
+            <section id="transactionsView" class="tab-view">
+                <div class="transactions-layout">
+                    <!-- Form side -->
+                    <div class="expense-form-container">
+                        <h3><i class="fa-solid fa-plus-circle"></i> Log New Item</h3>
+                        
+                        <div class="btn-group-toggle">
+                            <button id="btnToggleExpense" class="toggle-btn active" onclick="switchFormType('expense')">Expense</button>
+                            <button id="btnTogglePayment" class="toggle-btn" onclick="switchFormType('payment')">Settlement</button>
+                        </div>
+
+                        <!-- Add Expense Form -->
+                        <form id="expenseForm" class="active-form">
+                            <div class="form-group">
+                                <label for="expDesc">Description</label>
+                                <input type="text" id="expDesc" required placeholder="e.g. Groceries DMart">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="expAmount">Amount</label>
+                                    <input type="number" id="expAmount" required step="0.01" placeholder="0.00">
+                                </div>
+                                <div class="form-group">
+                                    <label for="expCurrency">Currency</label>
+                                    <select id="expCurrency" onchange="toggleExRateField()">
+                                        <option value="INR">INR (₹)</option>
+                                        <option value="USD">USD ($)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group" id="exRateGroup" style="display: none;">
+                                <label for="expExchangeRate">Exchange Rate (1 USD = ? INR)</label>
+                                <input type="number" id="expExchangeRate" value="83.50" step="0.01">
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="expPayer">Paid By</label>
+                                    <select id="expPayer" required></select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="expDate">Date</label>
+                                    <input type="date" id="expDate" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="expSplitType">Split Type</label>
+                                <select id="expSplitType" onchange="renderSplitParticipants()">
+                                    <option value="equal">Equally</option>
+                                    <option value="percentage">By Percentage (%)</option>
+                                    <option value="share">By Shares (Ratio)</option>
+                                    <option value="unequal">Unequally (Exact amounts)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Split With</label>
+                                <div class="participants-list" id="participantsSplitList">
+                                    <!-- Rendered dynamically -->
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="expNotes">Notes</label>
+                                <textarea id="expNotes" rows="2" placeholder="Optional notes..."></textarea>
+                            </div>
+                            <button type="submit" class="submit-btn"><i class="fa-solid fa-check"></i> Add Expense</button>
+                        </form>
+
+                        <!-- Add Payment Form -->
+                        <form id="paymentForm" style="display: none;">
+                            <div class="form-group">
+                                <label for="paySender">From (Debtor)</label>
+                                <select id="paySender" required></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="payReceiver">To (Creditor)</label>
+                                <select id="payReceiver" required></select>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="payAmount">Amount</label>
+                                    <input type="number" id="payAmount" required step="0.01" placeholder="0.00">
+                                </div>
+                                <div class="form-group">
+                                    <label for="payDate">Date</label>
+                                    <input type="date" id="payDate" required>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="payNotes">Notes / Description</label>
+                                <input type="text" id="payNotes" placeholder="e.g. Paid back cash">
+                            </div>
+                            <button type="submit" class="submit-btn"><i class="fa-solid fa-check"></i> Record Settlement</button>
+                        </form>
+                    </div>
+
+                    <!-- Ledger list side -->
+                    <div class="ledger-container">
+                        <h3><i class="fa-solid fa-clock-rotate-left"></i> Transaction Ledger</h3>
+                        <div class="ledger-list" id="ledgerList">
+                            <!-- Rendered dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- VIEW 5: IMPORT CSV WIZARD (Meera's view) -->
+            <section id="importView" class="tab-view">
+                <div class="view-header">
+                    <h2>Messy CSV Import Wizard</h2>
+                    <p class="subtitle">Meera's Request: "Clean up the duplicates — but I want to approve anything the app deletes or changes."</p>
+                </div>
+                
+                <!-- Upload Dropzone -->
+                <div class="import-dropzone" id="dropzone" onclick="document.getElementById('csvFileInput').click()">
+                    <i class="fa-solid fa-file-csv upload-icon"></i>
+                    <p class="dropzone-text">Click to choose or drag & drop <strong>expenses_export.csv</strong></p>
+                    <span class="btn-secondary">Choose File</span>
+                    <input type="file" id="csvFileInput" style="display: none;" accept=".csv">
+                </div>
+
+                <!-- Wizard Review Screen (Initially hidden) -->
+                <div class="import-review-container" id="importReviewContainer" style="display: none;">
+                    <div class="review-header-bar">
+                        <h3>Interactive CSV Resolution Wizard</h3>
+                        <div class="review-actions">
+                            <button class="btn-secondary" onclick="resetImportWizard()"><i class="fa-solid fa-times"></i> Cancel</button>
+                            <button class="btn-primary" onclick="confirmImport()"><i class="fa-solid fa-file-export"></i> Approve & Ingest Data</button>
+                        </div>
+                    </div>
+                    
+                    <div class="review-summary-banner">
+                        <div class="banner-stat">
+                            <span id="statTotalRows">0</span> total rows parsed
+                        </div>
+                        <div class="banner-stat text-warning">
+                            <span id="statAnomalousRows">0</span> rows flagged
+                        </div>
+                    </div>
+
+                    <div class="review-rows-list" id="reviewRowsList">
+                        <!-- Loaded dynamically with review cards -->
+                    </div>
+                </div>
+
+                <!-- Final Import Report (Shown after successful ingest) -->
+                <div class="import-report-container" id="importReportContainer" style="display: none;">
+                    <div class="report-card">
+                        <div class="report-header">
+                            <i class="fa-solid fa-circle-check report-success-icon"></i>
+                            <h3>Import Log & Verification Report</h3>
+                            <span class="report-date" id="reportTimestamp"></span>
+                        </div>
+                        
+                        <div class="report-stats-grid" id="reportStatsGrid">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <h4>Anomaly Correction History</h4>
+                        <div class="report-table-container">
+                            <table class="report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Row</th>
+                                        <th>Issue Category</th>
+                                        <th>Raw Value Checked</th>
+                                        <th>Anomaly Description</th>
+                                        <th>Approved Resolution</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportTableBody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <button class="btn-secondary margin-top" onclick="closeImportReport()">Done & View Balances</button>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

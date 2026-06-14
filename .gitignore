@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+*$py.class
+expenses.db
+.vscode/
+.idea/
+.DS_Store
